@@ -13,6 +13,7 @@ export type ApiKeyServices = {
   filesRead: boolean
   filesWrite: boolean
   dbRead: boolean
+  corsProxy: boolean
 }
 
 export const apiKeys = pgTable("api_keys", {
@@ -25,6 +26,7 @@ export const apiKeys = pgTable("api_keys", {
     filesRead: true,
     filesWrite: true,
     dbRead: false,
+    corsProxy: false,
   }),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),

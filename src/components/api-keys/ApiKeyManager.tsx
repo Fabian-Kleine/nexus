@@ -31,6 +31,7 @@ const SERVICE_LABELS: { key: keyof ApiKeyServices; label: string }[] = [
   { key: "filesRead", label: "Files: Read" },
   { key: "filesWrite", label: "Files: Write" },
   { key: "dbRead", label: "DB: Read" },
+  { key: "corsProxy", label: "CORS Proxy" },
 ]
 
 function CopyButton({ text }: { text: string }) {
@@ -57,6 +58,7 @@ function CreateKeyDialog({ onCreated }: { onCreated: () => void }) {
     filesRead: true,
     filesWrite: true,
     dbRead: false,
+    corsProxy: false,
   })
   const [loading, setLoading] = useState(false)
   const [createdKey, setCreatedKey] = useState<string | null>(null)
@@ -86,7 +88,7 @@ function CreateKeyDialog({ onCreated }: { onCreated: () => void }) {
     setTimeout(() => {
       setName("")
       setCreatedKey(null)
-      setServices({ email: true, filesRead: true, filesWrite: true, dbRead: false })
+      setServices({ email: true, filesRead: true, filesWrite: true, dbRead: false, corsProxy: false })
     }, 300)
   }
 

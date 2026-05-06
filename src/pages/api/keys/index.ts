@@ -16,6 +16,7 @@ const createSchema = z.object({
       filesRead: z.boolean().default(true),
       filesWrite: z.boolean().default(true),
       dbRead: z.boolean().default(false),
+      corsProxy: z.boolean().default(false),
     })
     .optional(),
 })
@@ -66,6 +67,7 @@ export const POST: APIRoute = async ({ request }) => {
       filesRead: true,
       filesWrite: true,
       dbRead: false,
+      corsProxy: false,
     },
     isActive: true,
   })
