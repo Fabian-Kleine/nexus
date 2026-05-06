@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Editor, { type OnMount } from "@monaco-editor/react"
 import { toast } from "sonner"
-import { Save, Eye, Code2 } from "lucide-react"
+import { Save, Eye, Code2, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -157,9 +157,12 @@ export function TemplateEditor({ templateId }: Props) {
     <div className="flex flex-col gap-4 h-[calc(100vh-8rem)]">
       {/* Top toolbar */}
       <div className="flex items-center gap-4 flex-wrap">
-        <a href="/emails" className="text-sm text-muted-foreground hover:text-foreground">
-          ← Emails
-        </a>
+        <Button variant="ghost" size="sm" asChild>
+          <a href="/emails">
+            <ArrowLeft />
+            Emails
+          </a>
+        </Button>
         <div className="flex-1 flex items-center gap-3 min-w-0">
           <div className="flex-1">
             <Input

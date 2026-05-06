@@ -20,7 +20,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
 
 interface FileRow {
   id: string
@@ -55,13 +54,7 @@ function CopyButton({ text }: { text: string }) {
   )
 }
 
-function UploadDialog({
-  onUploaded,
-  apiKey,
-}: {
-  onUploaded: () => void
-  apiKey: string
-}) {
+function UploadDialog({ onUploaded }: { onUploaded: () => void }) {
   const [open, setOpen] = useState(false)
   const [isPublic, setIsPublic] = useState(true)
   const [file, setFile] = useState<File | null>(null)
@@ -70,10 +63,6 @@ function UploadDialog({
 
   const handleUpload = async () => {
     if (!file) return
-    if (!apiKey) {
-      toast.error("Enter an API key above to upload files")
-      return
-    }
     setUploading(true)
     const fd = new FormData()
     fd.append("file", file)
@@ -81,7 +70,6 @@ function UploadDialog({
     try {
       const res = await fetch("/api/files/upload", {
         method: "POST",
-        headers: { "x-api-key": apiKey },
         body: fd,
       })
       const data = await res.json()
@@ -165,7 +153,6 @@ function UploadDialog({
 export function FileManager() {
   const [files, setFiles] = useState<FileRow[]>([])
   const [loading, setLoading] = useState(true)
-  const [apiKey, setApiKey] = useState("")
 
   const fetchFiles = () => {
     setLoading(true)
@@ -179,14 +166,7 @@ export function FileManager() {
   useEffect(fetchFiles, [])
 
   const deleteFile = async (id: string) => {
-    if (!apiKey) {
-      toast.error("Enter an API key above to delete files")
-      return
-    }
-    const res = await fetch(`/api/files/${id}`, {
-      method: "DELETE",
-      headers: { "x-api-key": apiKey },
-    })
+    const res = await fetch(`/api/files/${id}`, { method: "DELETE" })
     if (res.ok) {
       setFiles((prev) => prev.filter((f) => f.id !== id))
       toast.success("File deleted")
@@ -204,22 +184,14 @@ export function FileManager() {
             Manage uploaded files
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Input
-            placeholder="API key for upload/delete"
-            value={apiKey}
-            onChange={(e) => setApiKey(e.target.value)}
-            className="h-8 w-64 font-mono text-xs"
-            type="password"
-          />
-          <UploadDialog onUploaded={fetchFiles} apiKey={apiKey} />
-        </div>
+        <UploadDialog onUploaded={fetchFiles} />
       </div>
 
       <div className="rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-75">ID</TableHead>
               <TableHead>Name</TableHead>
               <TableHead>Type</TableHead>
               <TableHead>Size</TableHead>
@@ -244,6 +216,7 @@ export function FileManager() {
             ) : (
               files.map((f) => (
                 <TableRow key={f.id}>
+                  <TableCell className="font-mono text-xs">{f.id}</TableCell>
                   <TableCell className="font-medium max-w-xs truncate">
                     {f.originalName}
                   </TableCell>

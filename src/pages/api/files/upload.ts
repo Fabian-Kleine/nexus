@@ -3,7 +3,7 @@ export const prerender = false
 import type { APIRoute } from "astro"
 import { db } from "@/lib/db"
 import { files } from "@/lib/db/schema"
-import { validateApiKey, jsonError } from "@/lib/auth"
+import { validateApiKey, isMasterAuthed, jsonError } from "@/lib/auth"
 import { saveFile } from "@/lib/file-storage"
 import { nanoid } from "nanoid"
 
@@ -17,8 +17,12 @@ const ALLOWED_MIME_TYPES = new Set([
 ])
 
 export const POST: APIRoute = async ({ request }) => {
-  const key = await validateApiKey(request, "filesWrite")
-  if (!key) return jsonError("Unauthorized or file write service disabled", 403)
+  let apiKeyId: string | null = null
+  if (!isMasterAuthed(request)) {
+    const key = await validateApiKey(request, "filesWrite")
+    if (!key) return jsonError("Unauthorized or file write service disabled", 403)
+    apiKeyId = key.id
+  }
 
   let formData: FormData
   try {
@@ -46,7 +50,7 @@ export const POST: APIRoute = async ({ request }) => {
     mimeType: file.type,
     sizeBytes: buffer.byteLength,
     isPublic,
-    apiKeyId: key.id,
+    apiKeyId,
   })
 
   const url = isPublic ? `/uploads/public/${storedName}` : `/api/files/${id}`

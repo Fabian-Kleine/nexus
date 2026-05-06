@@ -3,7 +3,7 @@ export const prerender = false
 import type { APIRoute } from "astro"
 import { db } from "@/lib/db"
 import { files } from "@/lib/db/schema"
-import { validateApiKey, jsonError } from "@/lib/auth"
+import { validateApiKey, isMasterAuthed, jsonError } from "@/lib/auth"
 import { readFileBuffer, deleteFile } from "@/lib/file-storage"
 import { eq } from "drizzle-orm"
 
@@ -33,8 +33,10 @@ export const GET: APIRoute = async ({ params, request }) => {
 }
 
 export const DELETE: APIRoute = async ({ params, request }) => {
-  const key = await validateApiKey(request, "filesWrite")
-  if (!key) return jsonError("Unauthorized or file write service disabled", 403)
+  if (!isMasterAuthed(request)) {
+    const key = await validateApiKey(request, "filesWrite")
+    if (!key) return jsonError("Unauthorized or file write service disabled", 403)
+  }
 
   const [file] = await db
     .select()

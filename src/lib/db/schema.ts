@@ -61,6 +61,13 @@ export const files = pgTable("files", {
   mimeType: varchar("mime_type", { length: 100 }).notNull(),
   sizeBytes: integer("size_bytes").notNull(),
   isPublic: boolean("is_public").notNull().default(false),
-  apiKeyId: varchar("api_key_id", { length: 21 }).notNull(),
+  apiKeyId: varchar("api_key_id", { length: 21 }),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+})
+
+export const dbConnections = pgTable("db_connections", {
+  id: varchar("id", { length: 21 }).primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  url: text("url").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 })

@@ -1,9 +1,16 @@
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
-import { ChevronLeft, ChevronRight, Database, LogOut } from "lucide-react"
+import { Bookmark, BookmarkPlus, ChevronLeft, ChevronRight, Database, LogOut, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import {
   Table,
   TableBody,
@@ -12,8 +19,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-
-const LS_KEY = "nexus_db_conn"
 
 interface TableInfo {
   schema: string
@@ -33,6 +38,13 @@ interface SelectedTable {
   name: string
 }
 
+interface SavedConnection {
+  id: string
+  name: string
+  url: string
+  createdAt: string
+}
+
 export function TableExplorer() {
   const [connInput, setConnInput] = useState("")
   const [connectionString, setConnectionString] = useState<string | null>(null)
@@ -43,14 +55,20 @@ export function TableExplorer() {
   const [loading, setLoading] = useState(false)
   const [tablesLoading, setTablesLoading] = useState(false)
 
+  const [savedConnections, setSavedConnections] = useState<SavedConnection[]>([])
+  const [activeConnectionId, setActiveConnectionId] = useState<string | null>(null)
+  const [manageOpen, setManageOpen] = useState(false)
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false)
+  const [saveName, setSaveName] = useState("")
+  const [saving, setSaving] = useState(false)
+
   const LIMIT = 25
 
   useEffect(() => {
-    const stored = localStorage.getItem(LS_KEY)
-    if (stored) {
-      setConnInput(stored)
-      setConnectionString(stored)
-    }
+    fetch("/api/database/connections")
+      .then((r) => r.json())
+      .then((d) => setSavedConnections(d.connections ?? []))
+      .catch(() => {})
   }, [])
 
   useEffect(() => {
@@ -87,22 +105,60 @@ export function TableExplorer() {
       .finally(() => setLoading(false))
   }
 
-  const connect = () => {
-    const trimmed = connInput.trim()
-    if (!trimmed) return
-    localStorage.setItem(LS_KEY, trimmed)
-    setConnectionString(trimmed)
+  const connect = (url: string, id?: string) => {
+    setConnectionString(url)
+    setActiveConnectionId(id ?? null)
     setSelectedTable(null)
     setResult(null)
   }
 
   const disconnect = () => {
-    localStorage.removeItem(LS_KEY)
     setConnectionString(null)
+    setActiveConnectionId(null)
     setConnInput("")
     setTables([])
     setSelectedTable(null)
     setResult(null)
+  }
+
+  const handleConnect = () => {
+    const trimmed = connInput.trim()
+    if (!trimmed) return
+    connect(trimmed)
+  }
+
+  const saveCurrentConnection = async () => {
+    if (!connectionString || !saveName.trim()) return
+    setSaving(true)
+    try {
+      const res = await fetch("/api/database/connections", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: saveName.trim(), url: connectionString }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      setSavedConnections((prev) => [data.connection, ...prev])
+      setActiveConnectionId(data.connection.id)
+      setSaveDialogOpen(false)
+      setSaveName("")
+      toast.success("Connection saved")
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Failed to save")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const removeConnection = async (id: string) => {
+    const res = await fetch(`/api/database/connections/${id}`, { method: "DELETE" })
+    if (res.ok) {
+      setSavedConnections((prev) => prev.filter((c) => c.id !== id))
+      if (activeConnectionId === id) setActiveConnectionId(null)
+      toast.success("Connection removed")
+    } else {
+      toast.error("Failed to remove connection")
+    }
   }
 
   const selectTable = (schema: string, name: string) => {
@@ -121,27 +177,56 @@ export function TableExplorer() {
   }, {})
   const multipleSchemas = Object.keys(schemaGroups).length > 1
 
+  const activeConnection = savedConnections.find((c) => c.id === activeConnectionId)
+
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3">
         <h1 className="text-2xl font-semibold">Database</h1>
         <div className="flex items-center gap-2 ml-auto">
           {connectionString ? (
-            <Button variant="outline" size="sm" onClick={disconnect}>
-              <LogOut className="h-4 w-4 mr-1" />
-              Disconnect
-            </Button>
+            <>
+              <span className="text-sm text-muted-foreground font-mono truncate max-w-xs">
+                {activeConnection?.name ?? connectionString.replace(/:\/\/[^@]+@/, "://***@")}
+              </span>
+              {!activeConnectionId && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSaveDialogOpen(true)}
+                  title="Save this connection"
+                >
+                  <BookmarkPlus className="h-4 w-4 mr-1" />
+                  Save
+                </Button>
+              )}
+              <Button variant="outline" size="sm" onClick={disconnect}>
+                <LogOut className="h-4 w-4 mr-1" />
+                Disconnect
+              </Button>
+            </>
           ) : (
             <>
+              {savedConnections.length > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setManageOpen(true)}
+                  title="Saved connections"
+                >
+                  <Bookmark className="h-4 w-4 mr-1" />
+                  Saved ({savedConnections.length})
+                </Button>
+              )}
               <Input
                 placeholder="postgres://user:pass@host/dbname"
                 value={connInput}
                 onChange={(e) => setConnInput(e.target.value)}
                 className="h-8 w-80 font-mono text-xs"
                 type="password"
-                onKeyDown={(e) => e.key === "Enter" && connect()}
+                onKeyDown={(e) => e.key === "Enter" && handleConnect()}
               />
-              <Button size="sm" onClick={connect} disabled={!connInput.trim() || tablesLoading}>
+              <Button size="sm" onClick={handleConnect} disabled={!connInput.trim() || tablesLoading}>
                 Connect
               </Button>
             </>
@@ -198,7 +283,7 @@ export function TableExplorer() {
         </div>
 
         {/* Data grid */}
-        <div className="flex-1 flex flex-col rounded-lg border overflow-hidden">
+        <div className="flex-1 min-w-0 flex flex-col rounded-lg border overflow-hidden">
           {!selectedTable ? (
             <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">
               {connectionString
@@ -223,7 +308,7 @@ export function TableExplorer() {
                   </span>
                 )}
               </div>
-              <div className="flex-1 overflow-auto">
+              <div className="flex-1 overflow-auto *:data-[slot=table-container]:min-h-full">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -303,8 +388,83 @@ export function TableExplorer() {
           )}
         </div>
       </div>
+
+      {/* Saved connections dialog */}
+      <Dialog open={manageOpen} onOpenChange={setManageOpen}>
+        <DialogContent className="max-w-md overflow-hidden">
+          <DialogHeader>
+            <DialogTitle>Saved connections</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 min-w-0">
+            {savedConnections.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No saved connections yet.</p>
+            ) : (
+              savedConnections.map((c) => (
+                <div
+                  key={c.id}
+                  className="flex items-center gap-2 rounded-md border px-3 py-2 overflow-hidden"
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{c.name}</p>
+                    <p className="text-xs text-muted-foreground font-mono truncate">
+                      {c.url.replace(/:\/\/[^@]+@/, "://***@")}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        connect(c.url, c.id)
+                        setConnInput(c.url)
+                        setManageOpen(false)
+                      }}
+                    >
+                      Connect
+                    </Button>
+                    <button
+                      onClick={() => removeConnection(c.id)}
+                      className="text-muted-foreground hover:text-destructive p-1"
+                      title="Remove"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Save connection dialog */}
+      <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Save connection</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="conn-name">Name</Label>
+              <Input
+                id="conn-name"
+                placeholder="My Database"
+                value={saveName}
+                onChange={(e) => setSaveName(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && saveCurrentConnection()}
+                autoFocus
+              />
+            </div>
+            <Button
+              className="w-full"
+              onClick={saveCurrentConnection}
+              disabled={!saveName.trim() || saving}
+            >
+              {saving ? "Saving…" : "Save"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
-
-

@@ -34,7 +34,7 @@ export function AppLayout({ currentPath, children }: Props) {
       <TooltipProvider>
         <SidebarProvider>
           <AppSidebar currentPath={currentPath} />
-          <main className="flex flex-1 flex-col min-h-svh">
+          <main className="flex flex-1 flex-col min-h-svh min-w-0">
             <header className="flex h-12 items-center border-b px-4 gap-2">
               <SidebarTrigger />
               <div className="ml-auto">
