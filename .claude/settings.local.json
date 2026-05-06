@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"d:\\\\webapps\\\\nexus\" -Force)",
+      "Bash(Select-Object Name, Mode)",
+      "PowerShell(Get-ChildItem -Path \"d:\\\\webapps\\\\nexus\" -Force | Select-Object Name, @{Name=\"Mode\";Expression={$_.Mode}} | Format-Table -AutoSize)",
+      "Bash(pnpm add *)",
+      "Bash(pnpm shadcn *)",
+      "Bash(pnpm build *)",
+      "Bash(pnpm db:push)",
+      "Bash(findstr \"monaco-editor\")"
+    ]
+  }
+}

@@ -1,0 +1,8 @@
+---
+import AppLayout from "@/layouts/app.astro"
+import { TemplateEditor } from "@/components/emails/TemplateEditor"
+---
+
+<AppLayout>
+  <TemplateEditor client:only="react" />
+</AppLayout>

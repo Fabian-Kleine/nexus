@@ -1,0 +1,8 @@
+---
+import AppLayout from "@/layouts/app.astro"
+import { FileManager } from "@/components/files/FileManager"
+---
+
+<AppLayout>
+  <FileManager client:only="react" />
+</AppLayout>

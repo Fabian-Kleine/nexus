@@ -1,0 +1,12 @@
+---
+import Layout from "./main.astro"
+import { AppLayout } from "@/components/layout/AppLayout"
+
+const currentPath = Astro.url.pathname
+---
+
+<Layout>
+  <AppLayout currentPath={currentPath} client:load>
+    <slot />
+  </AppLayout>
+</Layout>

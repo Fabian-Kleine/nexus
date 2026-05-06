@@ -1,0 +1,8 @@
+---
+import AppLayout from "@/layouts/app.astro"
+import { TableExplorer } from "@/components/database/TableExplorer"
+---
+
+<AppLayout>
+  <TableExplorer client:only="react" />
+</AppLayout>

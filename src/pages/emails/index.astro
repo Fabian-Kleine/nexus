@@ -1,0 +1,8 @@
+---
+import AppLayout from "@/layouts/app.astro"
+import { EmailsPage } from "@/components/emails/EmailsPage"
+---
+
+<AppLayout>
+  <EmailsPage client:only="react" />
+</AppLayout>

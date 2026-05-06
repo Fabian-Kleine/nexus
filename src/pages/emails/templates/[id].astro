@@ -1,0 +1,10 @@
+---
+import AppLayout from "@/layouts/app.astro"
+import { TemplateEditor } from "@/components/emails/TemplateEditor"
+
+const { id } = Astro.params
+---
+
+<AppLayout>
+  <TemplateEditor templateId={id} client:only="react" />
+</AppLayout>

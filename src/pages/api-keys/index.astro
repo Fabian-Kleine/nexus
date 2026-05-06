@@ -1,0 +1,8 @@
+---
+import AppLayout from "@/layouts/app.astro"
+import { ApiKeyManager } from "@/components/api-keys/ApiKeyManager"
+---
+
+<AppLayout>
+  <ApiKeyManager client:only="react" />
+</AppLayout>
