@@ -1,6 +1,7 @@
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -15,6 +16,7 @@ import {
   FileBox,
   Database,
   KeyRound,
+  LogOut,
   Zap,
 } from "lucide-react"
 
@@ -64,6 +66,20 @@ export function AppSidebar({ currentPath }: Props) {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      <SidebarFooter className="border-t p-2">
+        <form method="post" action="/api/auth/logout">
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <button type="submit" className="w-full">
+                  <LogOut className="h-4 w-4" />
+                  <span>Sign out</span>
+                </button>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </form>
+      </SidebarFooter>
     </Sidebar>
   )
 }

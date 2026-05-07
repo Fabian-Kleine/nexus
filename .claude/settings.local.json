@@ -8,7 +8,8 @@
       "Bash(pnpm shadcn *)",
       "Bash(pnpm build *)",
       "Bash(pnpm db:push)",
-      "Bash(findstr \"monaco-editor\")"
+      "Bash(findstr \"monaco-editor\")",
+      "Bash(pnpm typecheck *)"
     ]
   }
 }
