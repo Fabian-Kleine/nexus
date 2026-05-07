@@ -16,10 +16,9 @@ WORKDIR /app
 
 RUN npm install -g pnpm
 
-COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile --prod
-
+COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
+COPY package.json pnpm-lock.yaml ./
 
 RUN mkdir -p /app/uploads/public /app/uploads/private
 
